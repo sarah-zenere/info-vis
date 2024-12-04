@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import Papa from 'papaparse';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
@@ -7,7 +7,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Toolti
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const BarChart = ({ csvData }) => {
-  const [chartData, setChartData] = useState({});
+  const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
     if (!csvData) return;
@@ -18,8 +18,7 @@ const BarChart = ({ csvData }) => {
       dynamicTyping: true, // Convert numbers and booleans automatically
       complete: function(results) {
         console.log('Parsed Data:', results); // Log parsed data to check structure
-        
-        // Check if the results contain the necessary data
+
         if (!results.data || results.data.length === 0) {
           console.error('No data found in CSV.');
           return;
@@ -33,22 +32,46 @@ const BarChart = ({ csvData }) => {
           return;
         }
 
-        // Prepare the chart data
-        const data = {
-          labels: validData.map(row => row.Name),
-          datasets: [
-            {
-              label: 'Scores',
-              data: validData.map(row => parseFloat(row.Score)),
-              backgroundColor: 'rgba(54, 162, 235, 0.6)',
-              borderColor: 'rgba(54, 162, 235, 1)',
-              borderWidth: 1,
-            },
-          ],
-        };
+        // Group the data by the first genre (ignore subsequent genres)
+        const groupedByFirstGenre = validData.reduce((acc, row) => {
+          // Get the first genre (ignore subsequent genres)
+          const firstGenre = row.Genres.split(',')[0].trim();
 
-        // Set the chart data
-        setChartData(data);
+          // If the genre doesn't exist in the accumulator, create a new array
+          if (!acc[firstGenre]) acc[firstGenre] = [];
+
+          // Add the anime to the respective genre group
+          acc[firstGenre].push(row);
+          
+          return acc;
+        }, {});
+
+        // Create chart data for each first genre and sort by score (only once)
+        const chartDataArray = Object.keys(groupedByFirstGenre).map(genre => {
+          const genreData = groupedByFirstGenre[genre];
+
+          // Sort the genre data by score in ascending order only once
+          const sortedData = genreData.sort((a, b) => a.Score - b.Score);
+
+          return {
+            genre,
+            data: {
+              labels: sortedData.map(row => row.Name),
+              datasets: [
+                {
+                  label: `Scores - ${genre}`,
+                  data: sortedData.map(row => parseFloat(row.Score)),
+                  backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                  borderColor: 'rgba(54, 162, 235, 1)',
+                  borderWidth: 1,
+                },
+              ],
+            },
+          };
+        });
+
+        // Set the chart data once after processing
+        setChartData(chartDataArray);
       },
       error: function(error) {
         console.error('Error parsing CSV:', error); // Log any parsing errors
@@ -56,24 +79,31 @@ const BarChart = ({ csvData }) => {
     });
   }, [csvData]);
 
+  // Memoize chart data to prevent re-calculation on each render
+  const memoizedChartData = useMemo(() => chartData, [chartData]);
+
   return (
     <div>
-      <h2>Anime Scores Bar Chart</h2>
-      {/* Render chart only if chartData is properly set */}
-      {chartData.labels ? (
-        <Bar
-          data={chartData}
-          options={{
-            scales: {
-              y: {
-                type: 'linear',  // Ensure linear scale is used for y-axis
-                beginAtZero: true,
-              },
-            },
-          }}
-        />
-      ) : (
+      <h2>Anime Scores Bar Charts by First Genre (Sorted by Score)</h2>
+      {memoizedChartData.length === 0 ? (
         <p>Loading chart...</p>
+      ) : (
+        memoizedChartData.map((chart, index) => (
+          <div key={index}>
+            <h3>{chart.genre}</h3>
+            <Bar
+              data={chart.data}
+              options={{
+                scales: {
+                  y: {
+                    type: 'linear',
+                    beginAtZero: true,
+                  },
+                },
+              }}
+            />
+          </div>
+        ))
       )}
     </div>
   );
