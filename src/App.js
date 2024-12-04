@@ -1,44 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import * as d3 from 'd3';
+import BarChart from './components/BarChart'; // Ensure the path is correct
 
 const App = () => {
-  const [animeData, setAnimeData] = useState(null);
+  const [csvData, setCsvData] = useState(null);
 
-  // Fetch cleaned and processed data
   useEffect(() => {
-    // Fetch data from your API or local JSON file
-    fetch('path_to_cleaned_data.json')
-      .then(response => response.json())
-      .then(data => setAnimeData(data))
-      .catch(error => console.error('Error fetching data:', error));
+    // Fetch the CSV file from the public folder
+    fetch('/data/filtered_anime_data.csv')
+      .then(response => response.text())  // Get the CSV as text
+      .then(csv => setCsvData(csv))  // Set the raw CSV data to state
+      .catch(error => console.error('Error loading CSV file:', error));
   }, []);
-
-  // D3.js code for visualization
-  useEffect(() => {
-    if (animeData) {
-      // D3.js code here for visualizations using the cleaned data
-      // Example: Create a simple bar chart
-      const svg = d3.select('#chart')
-        .append('svg')
-        .attr('width', 400)
-        .attr('height', 200);
-
-      svg.selectAll('rect')
-        .data(animeData)
-        .enter()
-        .append('rect')
-        .attr('x', (d, i) => i * 50)
-        .attr('y', d => 200 - d.rating * 20)
-        .attr('width', 40)
-        .attr('height', d => d.rating * 20)
-        .attr('fill', 'steelblue');
-    }
-  }, [animeData]);
 
   return (
     <div>
-      <h1>Anime Recommendation</h1> 
-      <div id="chart"></div>
+      <h1>Anime Recommendation</h1>
+      {csvData ? <BarChart csvData={csvData} /> : <p>Loading data...</p>}
     </div>
   );
 };
