@@ -36,3 +36,36 @@
     transform: rotate(360deg);
   }
 }
+
+/* Styles for the Heatmap */
+.heatmap-container {
+  width: 80%; /* Adjust width as needed */
+  margin: 30px auto;
+  padding: 20px;
+  background-color: #f0f0f0; /* Light background for contrast */
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.heatmap-container h1 {
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.heatmap {
+  margin: 20px 0;
+  display: block;
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.heatmap-cell {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.heatmap-cell:hover {
+  opacity: 0.8;
+}

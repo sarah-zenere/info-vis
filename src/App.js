@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as d3 from 'd3';
+import Heatmap from './components/heatMap';
 
 const App = () => {
   const [animeData, setAnimeData] = useState(null);
@@ -35,11 +36,20 @@ const App = () => {
     }
   }, [animeData]);
 
+ 
+
   return (
     <div>
       <h1>Anime Recommendation</h1> 
       <div id="chart"></div>
+
+      <div className="App">
+      <h1>Average Rating for Genres Per Year</h1>
+      <Heatmap />
+      </div>
+
     </div>
+   
   );
 };
 
