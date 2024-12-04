@@ -7,6 +7,8 @@ const App = () => {
   const [statusFilter, setStatusFilter] = useState('all'); // Filter by completed or ongoing
   const [episodeFilter, setEpisodeFilter] = useState(0); // Filter by maximum episode count
   const [genreFilter, setGenreFilter] = useState('Action'); // Default to 'Action' genre
+  const [genres, setGenres] = useState([]); // To store the unique genres
+  const [statuses, setStatuses] = useState([]); // To store the unique status values
 
   // Fetch and parse the CSV data on component mount
   useEffect(() => {
@@ -24,6 +26,20 @@ const App = () => {
               Aired: row[5],
             }));
             setAnimeData(parsedData);
+
+            // Extract unique genres from the data
+            const uniqueGenres = [
+              ...new Set(parsedData.flatMap((anime) => anime.Genres))
+            ];
+            setGenres(uniqueGenres); // Set unique genres to state
+
+            // Extract unique statuses from the data, excluding the 'status' field
+            const uniqueStatuses = [
+              ...new Set(parsedData.map((anime) => anime.Status))
+            ];
+
+            // Set statuses to include the unique ones from the data and add "All Statuses"
+            setStatuses(['all', ...uniqueStatuses]); // 'all' option for showing all statuses
           },
           error: (error) => console.error('Error parsing CSV:', error),
         });
@@ -39,19 +55,19 @@ const App = () => {
       <div>
         {/* Genre filter */}
         <select onChange={(e) => setGenreFilter(e.target.value)} value={genreFilter}>
-          <option value="Action">Action</option>
-          <option value="Adventure">Adventure</option>
-          <option value="Comedy">Comedy</option>
-          <option value="Drama">Drama</option>
-          <option value="Romance">Romance</option>
-          {/* Add other genres as needed */}
+          {/* Dynamically create genre filter options */}
+          {genres.map((genre) => (
+            <option key={genre} value={genre}>
+              {genre}
+            </option>
+          ))}
         </select>
 
-        {/* Status filter */}
+        {/* Status filter - Hardcoded options */}
         <select onChange={(e) => setStatusFilter(e.target.value)} value={statusFilter}>
-          <option value="all">All Status</option>
-          <option value="completed">Completed</option>
-          <option value="ongoing">Ongoing</option>
+          <option value="all">All Statuses</option>
+          <option value="Finished Airing">Finished Airing</option>
+          <option value="Currently Airing">Currently Airing</option>
         </select>
 
         {/* Episode count filter */}
