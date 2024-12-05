@@ -10,6 +10,7 @@ const App = () => {
   const [genres, setGenres] = useState([]); // To store the unique genres
   const [statuses, setStatuses] = useState([]); // To store the unique status values
   const [selectedAnime, setSelectedAnime] = useState(null); // State to hold selected anime for synopsis popup
+  const [showSynopsis, setShowSynopsis] = useState(false); // Flag to show synopsis box
 
   // Fetch and parse the CSV data on component mount
   useEffect(() => {
@@ -96,6 +97,16 @@ const App = () => {
     return genreMatch && episodeMatch && statusMatch;
   });
 
+  // Function to show the synopsis when "Show Synopsis" is clicked
+  const handleShowSynopsis = () => {
+    setShowSynopsis(true);
+  };
+
+  // Function to handle closing the synopsis box
+  const handleCloseSynopsis = () => {
+    setShowSynopsis(false);
+  };
+
   return (
     <div className="App">
       <h1>Anime Ratings Visualization</h1>
@@ -160,8 +171,8 @@ const App = () => {
         />
       )}
 
-      {/* Popup for Synopsis */}
-      {selectedAnime && (
+      {/* Popup for Basic Anime Details */}
+      {selectedAnime && !showSynopsis && (
         <div
           style={{
             position: 'absolute',
@@ -175,13 +186,46 @@ const App = () => {
           }}
         >
           <h2>{selectedAnime.Name}</h2>
-          <p>{selectedAnime.Synopsis || 'No synopsis available'}</p>
+          <p><strong>Rating:</strong> {selectedAnime.Rating}</p>
+          <p><strong>Episodes:</strong> {selectedAnime.Episodes}</p>
           <button
-            onClick={() => setSelectedAnime(null)}
+            onClick={handleShowSynopsis}
             style={{
               marginTop: '10px',
               padding: '5px 10px',
               backgroundColor: '#007BFF',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+            }}
+          >
+            Show Synopsis
+          </button>
+        </div>
+      )}
+
+      {/* Popup for Anime Synopsis */}
+      {showSynopsis && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '20%',
+            left: '50%',
+            width: '40%',
+            backgroundColor: 'white',
+            padding: '20px',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+            zIndex: 20,
+          }}
+        >
+          <h2>Synopsis</h2>
+          <p>{selectedAnime.Synopsis}</p>
+          <button
+            onClick={handleCloseSynopsis}
+            style={{
+              marginTop: '10px',
+              padding: '5px 10px',
+              backgroundColor: '#FF0000',
               color: 'white',
               border: 'none',
               borderRadius: '5px',
