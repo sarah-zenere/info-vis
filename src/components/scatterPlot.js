@@ -12,11 +12,15 @@ const ScatterPlot = ({ animeData, genreFilter, episodeLimitFilter, statusFilter,
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
   const [isMouseOverTooltip, setIsMouseOverTooltip] = useState(false);
+  const [selectedAnimeDetails, setSelectedAnimeDetails] = useState({ name: '', synopsis: '' });
+  
+  const [selectedYear, setSelectedYear] = useState(null); // null means no year filter (show all)
 
-  const [selectedAnimeDetails, setSelectedAnimeDetails] = useState({
-    name: '',
-    synopsis: '',
-  }); // State for selected anime details (name and synopsis)
+  // Dynamically calculate the minimum year in the dataset
+  const minYear = useMemo(() => {
+    const years = animeData.map((anime) => parseInt(anime.Aired.split(' ')[2]));
+    return Math.min(...years);
+  }, [animeData]);
 
   // Function to filter and process the anime data based on selected filters
   useEffect(() => {
@@ -45,12 +49,20 @@ const ScatterPlot = ({ animeData, genreFilter, episodeLimitFilter, statusFilter,
         });
       }
 
+      // Filter by selected year (if any)
+      if (selectedYear && selectedYear !== 2023) { // If selectedYear is 2023 or below, filter
+        filtered = filtered.filter((anime) => {
+          const releaseYear = parseInt(anime.Aired.split(' ')[2]);
+          return releaseYear === selectedYear;
+        });
+      }
+
       return filtered;
     };
 
     // Apply filters and set the filtered data
     setFilteredData(filterData());
-  }, [animeData, genreFilter, statusFilter, episodeLimitFilter]);
+  }, [animeData, genreFilter, statusFilter, episodeLimitFilter, selectedYear]);
 
   // Prepare data for the scatter plot
   const scatterPlotData = useMemo(() => {
@@ -78,7 +90,7 @@ const ScatterPlot = ({ animeData, genreFilter, episodeLimitFilter, statusFilter,
         status: anime.Status,
         episodes: anime.Episodes,
         genres: anime.Genres || [],
-        synopsis: anime.Synopsis || "No synopsis available", // Add the synopsis here
+        synopsis: anime.Synopsis || "No synopsis available",
       });
 
       const chartArea = event.chart.chartArea;
@@ -122,9 +134,9 @@ const ScatterPlot = ({ animeData, genreFilter, episodeLimitFilter, statusFilter,
   };
 
   return (
-    <div style={{ position: 'relative' }}>
-      <h2>Scatter Plot: Anime Ratings by Genre</h2>
-      
+    <div style={{ position: 'relative', background: 'linear-gradient(to bottom right, #f0f8ff, #e6e6fa)', padding: '20px', borderRadius: '15px', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)' }}>
+      <h2 style={{ textAlign: 'center', fontFamily: 'Arial, sans-serif', color: '#333' }}>Scatter Plot: Anime Ratings by Genre</h2>
+
       {/* Display Tooltip Information */}
       {tooltipContent && isTooltipVisible && (
         <div
@@ -138,6 +150,8 @@ const ScatterPlot = ({ animeData, genreFilter, episodeLimitFilter, statusFilter,
             border: '1px solid #ccc',
             boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
             zIndex: 10,
+            borderRadius: '8px',
+            fontFamily: 'Arial, sans-serif',
           }}
           onMouseEnter={handleTooltipMouseEnter}
           onMouseLeave={handleTooltipMouseLeave}
@@ -157,6 +171,7 @@ const ScatterPlot = ({ animeData, genreFilter, episodeLimitFilter, statusFilter,
               color: 'white',
               border: 'none',
               cursor: 'pointer',
+              borderRadius: '5px',
             }}
           >
             Show Synopsis
@@ -177,6 +192,7 @@ const ScatterPlot = ({ animeData, genreFilter, episodeLimitFilter, statusFilter,
             width: '100%',
             maxWidth: '600px',
             margin: '0 auto',
+            fontFamily: 'Arial, sans-serif',
           }}
         >
           <h3>{selectedAnimeDetails.name}</h3> {/* Display Anime Name */}
@@ -190,6 +206,7 @@ const ScatterPlot = ({ animeData, genreFilter, episodeLimitFilter, statusFilter,
               color: 'white',
               border: 'none',
               cursor: 'pointer',
+              borderRadius: '5px',
             }}
           >
             Close
@@ -197,13 +214,42 @@ const ScatterPlot = ({ animeData, genreFilter, episodeLimitFilter, statusFilter,
         </div>
       )}
 
+      {/* Scatter plot */}
       <Scatter
         data={scatterPlotData}
         options={{
           ...getChartConfig(filteredData, genreFilter, handlePointHover),
-          onClick: handlePointClick,
+          onClick: handlePointClick, // Add the click handler
         }}
       />
+
+      {/* Slider for selecting year */}
+      <div style={{ marginTop: '20px', textAlign: 'center' }}>
+        <label htmlFor="yearSlider" style={{ fontSize: '16px', color: '#333' }}>
+          Filter by Year:
+        </label>
+        <input 
+          id="yearSlider"
+          type="range"
+          min={1963} // Set min value dynamically
+          max={2023}  // Set the max value to 2023
+          step={1}
+          value={selectedYear || 2023} // Default to 2023
+          onChange={(e) => setSelectedYear(parseInt(e.target.value) === 2023 ? null : parseInt(e.target.value))} // Reset to all data if max is selected
+          style={{
+            width: '100%',
+            maxWidth: '600px',
+            margin: '10px 0',
+            cursor: 'pointer',
+            appearance: 'none',
+            height: '12px',
+            background: '#ddd',
+            borderRadius: '8px',
+            outline: 'none',
+          }}
+        />
+        <p>{selectedYear ? `Selected Year: ${selectedYear}` : 'Showing all years'}</p>
+      </div>
     </div>
   );
 };
