@@ -9,6 +9,7 @@ const App = () => {
   const [genreFilter, setGenreFilter] = useState(['Action']); // Always an array, default to 'Action' genre
   const [genres, setGenres] = useState([]); // To store the unique genres
   const [statuses, setStatuses] = useState([]); // To store the unique status values
+  const [selectedAnime, setSelectedAnime] = useState(null); // State to hold selected anime for synopsis popup
 
   // Fetch and parse the CSV data on component mount
   useEffect(() => {
@@ -24,6 +25,7 @@ const App = () => {
               Status: row[6] || 'Unknown',
               Episodes: parseInt(row[4], 10) || 0,
               Aired: row[5],
+              Synopsis: row[3] || 'No synopsis available', // Assuming the synopsis is in the 8th column
             }));
             setAnimeData(parsedData);
 
@@ -154,7 +156,40 @@ const App = () => {
           genreFilter={genreFilter}
           episodeLimitFilter={episodeFilter}
           statusFilter={statusFilter === 'all' ? null : statusFilter} // Pass null if "all" selected
+          setSelectedAnime={setSelectedAnime} // Pass the setSelectedAnime function to ScatterPlot to update selected anime
         />
+      )}
+
+      {/* Popup for Synopsis */}
+      {selectedAnime && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '20%',
+            left: '20%',
+            width: '60%',
+            backgroundColor: 'white',
+            padding: '20px',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+            zIndex: 20,
+          }}
+        >
+          <h2>{selectedAnime.Name}</h2>
+          <p>{selectedAnime.Synopsis || 'No synopsis available'}</p>
+          <button
+            onClick={() => setSelectedAnime(null)}
+            style={{
+              marginTop: '10px',
+              padding: '5px 10px',
+              backgroundColor: '#007BFF',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+            }}
+          >
+            Close
+          </button>
+        </div>
       )}
     </div>
   );
