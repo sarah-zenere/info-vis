@@ -4,9 +4,9 @@ import ScatterPlot from './components/scatterPlot'; // Import the ScatterPlot co
 
 const App = () => {
   const [animeData, setAnimeData] = useState([]);
-  const [statusFilter, setStatusFilter] = useState('all'); // Filter by completed or ongoing
-  const [episodeFilter, setEpisodeFilter] = useState(0); // Filter by maximum episode count
-  const [genreFilter, setGenreFilter] = useState('Action'); // Default to 'Action' genre
+  const [statusFilter, setStatusFilter] = useState('all'); // Status filter as a single value
+  const [episodeFilter, setEpisodeFilter] = useState([]); // Filter by episode ranges (array of ranges)
+  const [genreFilter, setGenreFilter] = useState(['Action']); // Always an array, default to 'Action' genre
   const [genres, setGenres] = useState([]); // To store the unique genres
   const [statuses, setStatuses] = useState([]); // To store the unique status values
 
@@ -27,13 +27,14 @@ const App = () => {
             }));
             setAnimeData(parsedData);
 
-            // Extract unique genres from the data
+            // Extract unique genres, filter out 'Genres'
             const uniqueGenres = [
               ...new Set(parsedData.flatMap((anime) => anime.Genres))
-            ];
+            ].filter((genre) => genre !== 'Genres'); // Filter out the "Genres" option
+
             setGenres(uniqueGenres); // Set unique genres to state
 
-            // Extract unique statuses from the data, excluding the 'status' field
+            // Extract unique statuses (including the 'all' option)
             const uniqueStatuses = [
               ...new Set(parsedData.map((anime) => anime.Status))
             ];
@@ -47,46 +48,112 @@ const App = () => {
       .catch((error) => console.error('Error loading CSV file:', error));
   }, []);
 
+  // Function to handle genre filter changes (ensure genreFilter is always an array)
+  const handleGenreFilterChange = (event) => {
+    const { value, checked } = event.target;
+
+    const newGenreFilter = checked
+      ? [...genreFilter, value] // Add genre if checked
+      : genreFilter.filter((genre) => genre !== value); // Remove genre if unchecked
+
+    setGenreFilter(newGenreFilter);
+  };
+
+  // Function to handle episode filter changes
+  const handleEpisodeFilterChange = (event) => {
+    const { value, checked } = event.target;
+    const newEpisodeFilter = checked
+      ? [...episodeFilter, value] // Add range if checked
+      : episodeFilter.filter((range) => range !== value); // Remove range if unchecked
+
+    setEpisodeFilter(newEpisodeFilter);
+  };
+
+  // Function to handle status filter changes (dropdown)
+  const handleStatusFilterChange = (event) => {
+    setStatusFilter(event.target.value);
+  };
+
+  // Filter the anime data based on genre, episode, and status filters
+  const filteredData = animeData.filter((anime) => {
+    // Filter by genre
+    const genreMatch = genreFilter.length === 0 || genreFilter.some((genre) => anime.Genres.includes(genre));
+
+    // Filter by episode range
+    const episodeMatch =
+      episodeFilter.length === 0 ||
+      episodeFilter.some((range) => {
+        const [min, max] = range.split('-').map(Number);
+        return anime.Episodes >= min && (max ? anime.Episodes <= max : true);
+      });
+
+    // Filter by status (only apply if "all" is not selected)
+    const statusMatch = statusFilter === 'all' || anime.Status === statusFilter;
+
+    // Return true if anime passes all filters
+    return genreMatch && episodeMatch && statusMatch;
+  });
+
   return (
     <div className="App">
       <h1>Anime Ratings Visualization</h1>
 
       {/* Filters */}
-      <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         {/* Genre filter */}
-        <select onChange={(e) => setGenreFilter(e.target.value)} value={genreFilter}>
-          {/* Dynamically create genre filter options */}
-          {genres.map((genre) => (
-            <option key={genre} value={genre}>
-              {genre}
-            </option>
+        <div className="genre-filter" style={{ width: '30%', display: 'flex', flexDirection: 'column' }}>
+          <h3>Genres</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+            {genres.map((genre) => (
+              <label key={genre} style={{ display: 'block', width: '100%' }}>
+                <input
+                  type="checkbox"
+                  value={genre}
+                  checked={genreFilter.includes(genre)} // If genre is in the filter, it's checked
+                  onChange={handleGenreFilterChange}
+                  style={{ marginRight: '5px' }}
+                />
+                {genre}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Status filter (dropdown) */}
+        <div className="status-filter" style={{ width: '30%' }}>
+          <h3>Status</h3>
+          <select onChange={handleStatusFilterChange} value={statusFilter} style={{ width: '100%', padding: '5px' }}>
+            <option value="all">All Statuses</option>
+            <option value="Finished Airing">Finished Airing</option>
+            <option value="Currently Airing">Currently Airing</option>
+          </select>
+        </div>
+
+        {/* Episode count filter (checkboxes) */}
+        <div className="episode-filter" style={{ width: '30%' }}>
+          <h3>Episode Count</h3>
+          {['0-50', '51-100', '101-200', '201-300', '301-500', '501-1000', '1001+'].map((range) => (
+            <label key={range} style={{ display: 'block', border: '1px solid #ccc', padding: '5px', marginBottom: '10px' }}>
+              <input
+                type="checkbox"
+                value={range}
+                checked={episodeFilter.includes(range)}
+                onChange={handleEpisodeFilterChange}
+                style={{ marginRight: '5px' }}
+              />
+              {range}
+            </label>
           ))}
-        </select>
-
-        {/* Status filter - Hardcoded options */}
-        <select onChange={(e) => setStatusFilter(e.target.value)} value={statusFilter}>
-          <option value="all">All Statuses</option>
-          <option value="Finished Airing">Finished Airing</option>
-          <option value="Currently Airing">Currently Airing</option>
-        </select>
-
-        {/* Episode count filter */}
-        <input
-          type="number"
-          placeholder="Max Episodes"
-          onChange={(e) => setEpisodeFilter(parseInt(e.target.value, 10))}
-          value={episodeFilter}
-          min="0"
-        />
+        </div>
       </div>
 
       {/* Scatter Plot component */}
-      {animeData.length > 0 && (
+      {filteredData.length > 0 && (
         <ScatterPlot
-          animeData={animeData}
+          animeData={filteredData} // Pass the filtered data to the ScatterPlot
           genreFilter={genreFilter}
           episodeLimitFilter={episodeFilter}
-          statusFilter={statusFilter === 'all' ? null : statusFilter} // Pass null if "all"
+          statusFilter={statusFilter === 'all' ? null : statusFilter} // Pass null if "all" selected
         />
       )}
     </div>
