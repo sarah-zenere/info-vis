@@ -12,6 +12,7 @@ const App = () => {
   const [statuses, setStatuses] = useState([]); // To store the unique status values
   const [selectedAnime, setSelectedAnime] = useState(null); // State to hold selected anime for synopsis popup
   const [showSynopsis, setShowSynopsis] = useState(false); // Flag to show synopsis box
+  const [hoveredGenre, setHoveredGenre] = useState(null); 
 
   // Fetch and parse the CSV data on component mount
   useEffect(() => {
@@ -108,6 +109,11 @@ const App = () => {
     setShowSynopsis(false);
   };
 
+  // Function to handle hover over genre
+  const handleGenreHover = (genre) => {
+    setHoveredGenre(genre);
+  };
+
   return (
     <div className="App">
       <h1>Anime Ratings Visualization</h1>
@@ -161,6 +167,9 @@ const App = () => {
         </div>
       </div>
 
+      {/* Heatmap component */}
+      <Heatmap data={animeData} onGenreHover={handleGenreHover} />
+
       {/* Scatter Plot component */}
       {filteredData.length > 0 && (
         <ScatterPlot
@@ -172,10 +181,7 @@ const App = () => {
         />
       )}
 
-<<<<<<< HEAD
-    <h1>Anime Genre Rating Heatmap</h1>
-    <Heatmap data={filteredData} />
-=======
+
       {/* Popup for Basic Anime Details */}
       {selectedAnime && !showSynopsis && (
         <div
@@ -240,9 +246,7 @@ const App = () => {
           </button>
         </div>
       )}
->>>>>>> refs/remotes/origin/main
     </div>
-   
   );
 };
 
