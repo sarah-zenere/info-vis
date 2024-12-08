@@ -1,107 +1,134 @@
-import React from "react";
-import * as d3 from "d3";
-import axios from "axios";
+import React, { useEffect, useRef } from 'react';
+import * as d3 from 'd3';
 
-const grey = "#dddfe2";
+const Heatmap = ({ data }) => {
+  const svgRef = useRef();
 
-export default class Heatmap extends React.Component {
-  state = {
-    data: []
+  useEffect(() => {
+    if (data.length === 0) return;
+
+    const genresByYear = processData(data);
+
+    // Create the heatmap
+    drawHeatmap(genresByYear);
+  }, [data]);
+
+  // Process the data to calculate the average rating for each genre per year
+  const processData = (data) => {
+    const genresByYear = {};
+
+    data.forEach((anime) => {
+      const year = new Date(anime.Aired).getFullYear();
+      const genres = anime.Genres || []; // Handle empty genres field
+
+      // Skip entries with no genres
+      if (genres.length === 0) return;
+
+      const rating = anime.Rating;
+
+      genres.forEach((genre) => {
+        if (!genresByYear[year]) genresByYear[year] = {};
+        if (!genresByYear[year][genre]) genresByYear[year][genre] = [];
+        genresByYear[year][genre].push(rating);
+      });
+    });
+
+    // Calculate the average rating for each genre per year
+    for (const year in genresByYear) {
+      for (const genre in genresByYear[year]) {
+        const ratings = genresByYear[year][genre];
+        const avgRating = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+        genresByYear[year][genre] = avgRating;
+      }
+    }
+
+    return genresByYear;
   };
 
-  constructor() {
-    super();
+  // Draw the heatmap with D3.js
+  const drawHeatmap = (genresByYear) => {
+    const svg = d3.select(svgRef.current);
+    svg.selectAll('*').remove(); // Clear the SVG before drawing
 
-    this._chartRef = React.createRef();
-  }
+    const margin = { top: 40, right: 20, bottom: 60, left: 100 };
+    const width = 800 - margin.left - margin.right;
+    const height = 600 - margin.top - margin.bottom;
 
-  componentDidMount() {
-    this.fetchChartData();
-  }
+    // Extract all genres and years
+    const genres = Array.from(
+      new Set(Object.values(genresByYear).flatMap((yearData) => Object.keys(yearData)))
+    );
+    const years = Object.keys(genresByYear).map((year) => parseInt(year));
 
-  attachChart() {
-    const { data } = this.state;
-
-    const margin = { top: 0, right: 0, bottom: 40, left: 40 },
-      width = 300 - margin.left - margin.right,
-      height = 450 - margin.top - margin.bottom;
-
-    // append the svg object to the body of the page
-    this._svg = d3
-      .select("#chart")
-      .append("svg")
-      .attr("width", width + margin.left + margin.right)
-      .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-    // Labels of row and columns -> unique identifier of the column called 'group' and 'variable'
-    var myGroups = d3.map(data, d => d.group).keys();
-
-    var myVars = d3.map(data, d => d.variable).keys();
-
-    // Build X scales and axis:
-    var x = d3
-      .scaleBand()
-      .domain(myGroups)
+    // Set scales
+    const xScale = d3.scaleBand()
+      .domain(years)
       .range([0, width])
-      .padding(0.1);
+      .padding(0.05);
 
-    this._svg
-      .append("g")
-      .style("font-size", 12)
-      .attr("transform", "translate(0," + height + ")")
-      .call(d3.axisBottom(x).tickSize(0))
-      .select(".domain")
-      .remove();
-
-    // Build Y scales and axis:
-    var y = d3
-      .scaleBand()
-      .domain(myVars)
+    const yScale = d3.scaleBand()
+      .domain(genres)
       .range([0, height])
-      .padding(0.1);
+      .padding(0.05);
 
-    this._svg
-      .append("g")
-      .style("font-size", 12)
-      .call(d3.axisLeft(y).tickSize(0))
-      .select(".domain")
-      .remove();
+    const colorScale = d3.scaleSequential(d3.interpolateYlGnBu)
+      .domain([0, 10]); // Assuming ratings range from 0 to 10
 
-    // Build color scale
-    var myColor = d3
-      .scaleThreshold()
-      .domain([1, 25, 50, 75, 100])
-      .range([grey, "#A1E7CC", "#50D2A0", "#31BE88", "#26966B"]);
+    // Append an SVG group for margin
+    const g = svg.append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // add the squares
-    this._svg
-      .selectAll()
-      .data(data, d => d.group + ":" + d.variable)
+    // Draw the rectangles (cells) for each genre and year
+    g.selectAll('.cell')
+      .data(Object.entries(genresByYear).flatMap(([year, genreData]) =>
+        Object.entries(genreData).map(([genre, avgRating]) => ({
+          year: parseInt(year),
+          genre,
+          rating: avgRating,
+        }))
+      ))
       .enter()
-      .append("rect")
-      .attr("x", d => x(d.group))
-      .attr("y", d => y(d.variable))
-      .attr("width", x.bandwidth())
-      .attr("height", y.bandwidth())
-      .style("fill", d => myColor(d.value))
-      .style("stroke-width", 4)
-      .style("stroke", "none")
-      .style("opacity", 0.8);
-  }
+      .append('rect')
+      .attr('class', 'cell')
+      .attr('x', (d) => xScale(d.year))
+      .attr('y', (d) => yScale(d.genre))
+      .attr('width', xScale.bandwidth())
+      .attr('height', yScale.bandwidth())
+      .attr('fill', (d) => colorScale(d.rating));
 
-  fetchChartData() {
-    axios
-      .get(
-        "https://gist.githubusercontent.com/erickakoyama/80ba09975fd73c4e3fb29f78ae9318f0/raw/49d0947777e64fddb1e9d2dc01dc8dc251d59a60/heatmap_data.csv"
-      )
-      .then(({ data }) =>
-        this.setState({ data: d3.csvParse(data) }, () => this.attachChart())
-      );
-  }
+    // Add the x-axis (years)
+    g.append('g')
+      .selectAll('.x-axis')
+      .data(years)
+      .enter()
+      .append('text')
+      .attr('class', 'x-axis')
+      .attr('x', (d) => xScale(d) + xScale.bandwidth() / 2)
+      .attr('y', height)
+      .attr('dy', '1em')
+      .attr('text-anchor', 'middle')
+      .text((d) => d);
 
-  render() {
-    return <div id="chart" />;
-  }
-}
+    // Add the y-axis (genres)
+    g.append('g')
+      .selectAll('.y-axis')
+      .data(genres)
+      .enter()
+      .append('text')
+      .attr('class', 'y-axis')
+      .attr('x', 0)
+      .attr('y', (d) => yScale(d) + yScale.bandwidth() / 2)
+      .attr('dy', '0.35em')
+      .attr('text-anchor', 'middle')
+      .text((d) => d);
+  };
+
+  return (
+    <div>
+      <h2>Genre Rating Heatmap</h2>
+      <svg ref={svgRef} width="800" height="600" />
+    </div>
+  );
+};
+
+export default Heatmap;
