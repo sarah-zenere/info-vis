@@ -1,0 +1,56 @@
+/* styles.css */
+
+/* Slider Styles for Pokéball Thumb */
+input[type="range"]::-webkit-slider-thumb {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(to top left, red 50%, white 50%);
+  border: 2px solid black;
+  position: relative;
+  box-shadow: 0 0 0 4px white; /* Adds a white border around the thumb */
+}
+
+input[type="range"]:focus::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px #000; /* Adds a black border on focus */
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(to top left, red 50%, white 50%);
+  border: 2px solid black;
+  position: relative;
+  box-shadow: 0 0 0 4px white;
+}
+
+/* Tooltip Styles */
+.tooltip {
+  position: absolute;
+  padding: 10px;
+  background-color: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  border-radius: 8px;
+  font-family: Arial, sans-serif;
+}
+
+/* Additional styling for buttons */
+button {
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  border: none;
+}
+
+.show-synopsis-button {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.close-synopsis-button {
+  background-color: #f44336;
+  color: white;
+}
