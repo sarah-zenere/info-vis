@@ -3,6 +3,13 @@ import Papa from 'papaparse'; // To parse CSV data
 import ScatterPlot from './components/scatterPlot'; // Import the ScatterPlot component
 import Heatmap from './components/heatMap';
 
+/**
+ * Anime Ratings Visualization App
+ * 
+ * This project is designed to help anime enthusiasts and researchers gain insights into anime ratings, genres, and other attributes.
+ * Users can filter data by genre, status, and episode count and view relationships through interactive heatmaps and scatter plots.
+ */
+
 const App = () => {
   const [animeData, setAnimeData] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all'); // Status filter as a single value
@@ -117,6 +124,9 @@ const App = () => {
   return (
     <div className="App">
       <h1>Anime Ratings Visualization</h1>
+      <p style={{ marginBottom: '20px' }}>
+        This project is designed to help anime enthusiasts and researchers gain insights into anime ratings, genres, and other attributes. Users can filter data by genre, status, and episode count and view relationships through interactive heatmaps and scatter plots.
+      </p>
 
       {/* Filters */}
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -167,20 +177,26 @@ const App = () => {
         </div>
       </div>
 
-      {/* Heatmap component */}
-      <Heatmap data={animeData} onGenreHover={handleGenreHover} />
+      {/* Visualization Components */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', width: '100%' }}>
+        {/* Heatmap component */}
+        <div style={{ flex: '1', maxWidth: '50%' }}>
+          <Heatmap data={animeData} onGenreHover={handleGenreHover} />
+        </div>
 
-      {/* Scatter Plot component */}
-      {filteredData.length > 0 && (
-        <ScatterPlot
-          animeData={filteredData} // Pass the filtered data to the ScatterPlot
-          genreFilter={genreFilter}
-          episodeLimitFilter={episodeFilter}
-          statusFilter={statusFilter === 'all' ? null : statusFilter} // Pass null if "all" selected
-          setSelectedAnime={setSelectedAnime} // Pass the setSelectedAnime function to ScatterPlot to update selected anime
-        />
-      )}
-
+        {/* Scatter Plot component */}
+        <div style={{ flex: '1', maxWidth: '50%' }}>
+          {filteredData.length > 0 && (
+            <ScatterPlot
+              animeData={filteredData} // Pass the filtered data to the ScatterPlot
+              genreFilter={genreFilter}
+              episodeLimitFilter={episodeFilter}
+              statusFilter={statusFilter === 'all' ? null : statusFilter} // Pass null if "all" selected
+              setSelectedAnime={setSelectedAnime} // Pass the setSelectedAnime function to ScatterPlot to update selected anime
+            />
+          )}
+        </div>
+      </div>
 
       {/* Popup for Basic Anime Details */}
       {selectedAnime && !showSynopsis && (

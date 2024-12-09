@@ -13,7 +13,7 @@ const ScatterPlot = ({ animeData, genreFilter, episodeLimitFilter, statusFilter,
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
   const [isMouseOverTooltip, setIsMouseOverTooltip] = useState(false);
   const [selectedAnimeDetails, setSelectedAnimeDetails] = useState({ name: '', synopsis: '' });
-  
+
   const [selectedYear, setSelectedYear] = useState(null); // null means no year filter (show all)
 
   // Dynamically calculate the minimum year in the dataset
@@ -231,8 +231,8 @@ const ScatterPlot = ({ animeData, genreFilter, episodeLimitFilter, statusFilter,
         <input 
           id="yearSlider"
           type="range"
-          min={1963} // Set min value dynamically
-          max={2023}  // Set the max value to 2023
+          min={1963}  // Set min value dynamically
+          max={2023}  // Max value is set to 2023
           step={1}
           value={selectedYear || 2023} // Default to 2023
           onChange={(e) => setSelectedYear(parseInt(e.target.value) === 2023 ? null : parseInt(e.target.value))} // Reset to all data if max is selected
