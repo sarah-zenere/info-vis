@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse'; // To parse CSV data
 import ScatterPlot from './components/scatterPlot'; // Import the ScatterPlot component
-import Heatmap from './components/heatMap';
-
-/**
- * Anime Ratings Visualization App
- * 
- * This project is designed to help anime enthusiasts and researchers gain insights into anime ratings, genres, and other attributes.
- * Users can filter data by genre, status, and episode count and view relationships through interactive heatmaps and scatter plots.
- */
+import Heatmap from './components/heatMap'; // Import the Heatmap component
 
 const App = () => {
   const [animeData, setAnimeData] = useState([]);

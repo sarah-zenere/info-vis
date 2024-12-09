@@ -88,4 +88,49 @@ input[type="checkbox"]:checked {
 .y-axis {
   font-size: 10px;
 }
+/* Style the slider itself */
+input[type="range"].slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 10px;
+  background: #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+input[type="range"].slider:hover {
+  background: #bbb;
+}
+
+/* Custom thumb for the slider (Pokéball thumb) */
+input[type="range"].slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(circle, white 50%, red 50%);
+  border: 3px solid black; /* Adds the black line in the middle of the Pokéball */
+  cursor: pointer;
+}
+
+input[type="range"].slider::-moz-range-thumb {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(circle, white 50%, red 50%);
+  border: 3px solid black; /* Adds the black line in the middle of the Pokéball */
+  cursor: pointer;
+}
+
+input[type="range"].slider::-ms-thumb {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(circle, white 50%, red 50%);
+  border: 3px solid black; /* Adds the black line in the middle of the Pokéball */
+  cursor: pointer;
+}
 
